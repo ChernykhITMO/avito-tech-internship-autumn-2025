@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17
+    container_name: avito-db
+    environment:
+      POSTGRES_USER: avito
+      POSTGRES_PASSWORD: avito
+      POSTGRES_DB: avito_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U avito -d avito_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    build: .
+    container_name: avito-app
+    depends_on:
+      - db
+    environment:
+      DB_DSN: "postgres://avito:avito@db:5432/avito_db?sslmode=disable"
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:
