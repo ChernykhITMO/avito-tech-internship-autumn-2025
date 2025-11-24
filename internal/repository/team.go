@@ -18,7 +18,7 @@ type TeamRepository struct {
 	db *sql.DB
 }
 
-func NewTeamRepository(db *sql.DB) *TeamRepository {
+func NewTeamRepository(db *sql.DB) domain.TeamRepository {
 	return &TeamRepository{
 		db: db,
 	}

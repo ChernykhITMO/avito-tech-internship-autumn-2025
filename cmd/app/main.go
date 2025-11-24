@@ -9,11 +9,12 @@ import (
 
 	"github.com/ChernykhITMO/Avito/db/migrations"
 	dbutils "github.com/ChernykhITMO/Avito/db/utils"
-	"github.com/ChernykhITMO/Avito/internal/repository"
-	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/ChernykhITMO/Avito/internal/httpserver"
+	"github.com/ChernykhITMO/Avito/internal/repository"
 	"github.com/ChernykhITMO/Avito/internal/service"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 const maxAttempts = 30
@@ -34,7 +35,7 @@ func main() {
 	defer db.Close()
 
 	if err := db.PingContext(ctx); err != nil {
-		log.Fatalf("failed to connect to database: ", err)
+		log.Fatalf("failed to connect to database: %v", err)
 	}
 
 	log.Println("Running database migrations...")
@@ -46,15 +47,18 @@ func main() {
 	teamRepo := repository.NewTeamRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	prRepo := repository.NewPRRepository(db)
+	statsRepo := repository.NewStatsRepository(db)
 
 	teamSvc := service.NewTeamService(teamRepo, userRepo)
 	userSvc := service.NewUserService(userRepo, prRepo)
 	prSvc := service.NewPullRequestService(prRepo, userRepo, teamRepo)
+	statsSvc := service.NewStatsService(statsRepo)
 
 	srv := httpserver.New(":8080", httpserver.Deps{
 		TeamService:        teamSvc,
 		UserService:        userSvc,
 		PullRequestService: prSvc,
+		StatsService:       statsSvc,
 	})
 
 	log.Println("Starting server on :8080")

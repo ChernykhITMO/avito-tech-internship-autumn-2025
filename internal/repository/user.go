@@ -15,7 +15,7 @@ type UserRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
+func NewUserRepository(db *sql.DB) domain.UserRepository {
 	return &UserRepository{
 		db: db,
 	}

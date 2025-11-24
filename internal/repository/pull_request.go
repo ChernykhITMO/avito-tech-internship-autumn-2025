@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/ChernykhITMO/Avito/internal/domain"
 )
@@ -16,7 +15,7 @@ type PRRepository struct {
 	db *sql.DB
 }
 
-func NewPRRepository(db *sql.DB) *PRRepository {
+func NewPRRepository(db *sql.DB) domain.PRRepository {
 	return &PRRepository{
 		db: db,
 	}
@@ -24,36 +23,40 @@ func NewPRRepository(db *sql.DB) *PRRepository {
 
 func (r *PRRepository) Create(ctx context.Context, req domain.PullRequest) (*domain.PullRequest, error) {
 	const query = `
-		INSERT INTO pull_requests (
-			pull_request_id,
-			pull_request_name,
-			author_id,
-			status,
-			merged_at
-		)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING pull_request_id, pull_request_name, author_id, status, created_at, merged_at
-	`
-
-	var mergedParam *time.Time
-	if !req.MergedAt.IsZero() {
-		mergedParam = &req.MergedAt
-	}
+    INSERT INTO pull_requests (
+        pull_request_id,
+        pull_request_name,
+        author_id,
+        status
+    )
+    VALUES ($1, $2, $3, $4)
+    RETURNING pull_request_id, pull_request_name, author_id, status, created_at, merged_at
+    `
 
 	var (
 		pr       domain.PullRequest
 		mergedAt sql.NullTime
 	)
 
-	if err := r.db.QueryRowContext(ctx, query,
-		req.ID, req.Name, req.AuthorID, req.Status, mergedParam).
-		Scan(&pr.ID, &pr.Name, &pr.AuthorID, &pr.Status, &pr.CreatedAt, &mergedAt); err != nil {
+	err := r.db.QueryRowContext(ctx, query,
+		req.ID, req.Name, req.AuthorID, req.Status,
+	).Scan(
+		&pr.ID,
+		&pr.Name,
+		&pr.AuthorID,
+		&pr.Status,
+		&pr.CreatedAt,
+		&mergedAt,
+	)
+
+	if err != nil {
 		return nil, fmt.Errorf("create pull request: %w", err)
 	}
 
 	if mergedAt.Valid {
 		pr.MergedAt = mergedAt.Time
 	}
+
 	return &pr, nil
 }
 

@@ -13,6 +13,7 @@ type Deps struct {
 	TeamService        service.TeamService
 	UserService        service.UserService
 	PullRequestService service.PullRequestService
+	StatsService       service.StatsService
 }
 
 type Server struct {
@@ -26,6 +27,7 @@ func New(addr string, deps Deps) *Server {
 		deps.TeamService,
 		deps.UserService,
 		deps.PullRequestService,
+		deps.StatsService,
 	)
 	router.Register(mux)
 
