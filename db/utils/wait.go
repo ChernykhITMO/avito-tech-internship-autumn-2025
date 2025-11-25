@@ -27,7 +27,12 @@ func WaitForDB(ctx context.Context, dsn string, maxAttempts int) (*sql.DB, error
 
 			if err = db.PingContext(ctx); err != nil {
 				log.Printf("Failed to ping database (attempt %d/%d): %v", i+1, maxAttempts, err)
-				db.Close()
+				defer func() {
+					if err := db.Close(); err != nil {
+						log.Printf("failed to close db: %v", err)
+					}
+				}()
+				
 				time.Sleep(1 * time.Second)
 				continue
 			}

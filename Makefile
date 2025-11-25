@@ -12,7 +12,6 @@ run:
 test:
 	go test ./...
 
-# если будешь подключать линтер (golangci-lint)
 lint:
 	golangci-lint run ./...
 
@@ -22,6 +21,3 @@ docker-up:
 docker-down:
 	docker-compose down
 
-# если есть отдельный бинарник/команда для миграций
-migrate:
-	go run ./cmd/migrator

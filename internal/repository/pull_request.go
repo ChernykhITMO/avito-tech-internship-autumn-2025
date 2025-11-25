@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/ChernykhITMO/Avito/internal/domain"
 )
@@ -118,7 +119,9 @@ func (r *PRRepository) SetReviewers(ctx context.Context, id string, reviewers []
 	if err != nil {
 		return fmt.Errorf("begin tx for set reviewers: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	const queryDelete = `DELETE FROM pull_request_reviewers WHERE pull_request_id = $1`
 
@@ -157,7 +160,11 @@ func (r *PRRepository) ListByReviewer(ctx context.Context, reviewerID string) ([
 	if err != nil {
 		return nil, fmt.Errorf("select reviewers: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows.Close error: %v", err)
+		}
+	}()
 
 	var prs []domain.PullRequest
 	for rows.Next() {
@@ -192,7 +199,11 @@ func (r *PRRepository) ListReviewers(ctx context.Context, prID string) ([]string
 	if err != nil {
 		return nil, fmt.Errorf("list reviewers: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows.Close error: %v", err)
+		}
+	}()
 
 	var reviewers []string
 	for rows.Next() {

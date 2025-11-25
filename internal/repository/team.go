@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/ChernykhITMO/Avito/internal/domain"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -57,7 +58,11 @@ func (r *TeamRepository) GetByName(ctx context.Context, name string) (*domain.Te
 	if err != nil {
 		return nil, fmt.Errorf("get team members: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows.Close error: %v", err)
+		}
+	}()
 
 	var members []domain.User
 	for rows.Next() {

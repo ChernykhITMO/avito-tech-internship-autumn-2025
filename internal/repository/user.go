@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/ChernykhITMO/Avito/internal/domain"
 )
@@ -36,13 +37,21 @@ func (r *UserRepository) SaveAll(ctx context.Context, users []domain.User) error
 	if err != nil {
 		return fmt.Errorf("begin tx for save users: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
+			log.Printf("tx.Rollback error: %v", err)
+		}
+	}()
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("prepare save user stmt: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("stmt.Close error: %v", err)
+		}
+	}()
 
 	for _, u := range users {
 		if _, err := stmt.ExecContext(ctx, u.ID, u.Name, u.TeamName, u.IsActive); err != nil {
@@ -99,7 +108,11 @@ func (r *UserRepository) ListReviewCandidates(ctx context.Context, teamName, exc
 	if err != nil {
 		return nil, fmt.Errorf("list review candidates: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows.Close error: %v", err)
+		}
+	}()
 
 	var users []domain.User
 	for rows.Next() {

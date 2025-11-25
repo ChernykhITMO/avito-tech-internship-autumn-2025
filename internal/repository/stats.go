@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"github.com/ChernykhITMO/Avito/internal/domain"
 )
@@ -46,7 +47,11 @@ func (r *StatsRepository) GetAssignmentsStats(ctx context.Context) ([]domain.Use
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("rows.Close error: %v", err)
+		}
+	}()
 
 	var stats []domain.UserAssignmentStat
 	for rows.Next() {
